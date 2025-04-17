@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Числовой кроссворд</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 0;
+        }
+        #crossNumber {
+            background-color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin: 60px auto 20px;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+        .grid-cell {
+            width: calc(11vw - 2px);
+            max-width: 60px;
+            height: calc(11vw - 2px);
+            max-height: 60px;
+            border: 2px solid #bdbdbd; /* усилена контрастность границ */
+            transition: background 0.3s, color 0.3s, border 0.3s; /* плавная анимация */
+            display: inline-block;
+            margin: 1px;
+            text-align: center;
+            line-height: calc(11vw - 2px);
+            font-size: calc(5vw);
+            font-weight: bold;
+            background-color: white;
+            vertical-align: middle;
+            position: relative;
+        }
+        .grid-cell input {
+            width: 100%;
+            height: 100%;
+            font-size: calc(5vw);
+            text-align: center;
+            border: none;
+            outline: none;
+            background: #f8f8f8;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            appearance: textfield;
+            -moz-appearance: textfield;
+            transition: background 0.3s, color 0.3s, border 0.3s; /* плавная анимация */
+        }
+        /* Скрываем стрелки в Chrome, Safari, Edge, Opera */
+        .grid-cell input::-webkit-outer-spin-button,
+        .grid-cell input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        @media (min-width: 600px) {
+            .grid-cell {
+                width: 60px;
+                height: 60px;
+                line-height: 60px;
+                font-size: 24px;
+                margin: 2px;
+            }
+            .grid-cell input {
+                font-size: 24px;
+            }
+            body {
+                padding: 20px;
+            }
+        }
+        .grid-cell.sum {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border: 2px solid #388e3c; /* усилена контрастность */
+        }
+        .grid-cell.incorrect {
+            background-color: #ffcdd2;
+            border: 2px solid #e57373;
+        }
+        .grid-cell.correct {
+            background-color: #a5d6a7;
+            border: 2px solid #388e3c;
+        }
+        .grid-cell input.correct {
+            background-color: #a5d6a7;
+            border: 2px solid #388e3c;
+        }
+        .grid-cell input.incorrect {
+            background-color: #ffcdd2;
+            border: 2px solid #e57373;
+        }
+        #crosswordGrid {
+            display: inline-block;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            margin: 0 auto;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: auto;
+        }
+        .grid-row {
+            white-space: nowrap;
+            margin: 0;
+            padding: 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        select {
+            padding: 5px;
+            font-size: 16px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        #languageSelect {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 0;
+            }
+            #crossNumber {
+                margin-top: 50px;
+                padding: 5px;
+                width: 100%;
+            }
+            #crosswordGrid {
+                padding: 5px;
+                transform: scale(0.95);
+                transform-origin: center center;
+            }
+            .grid-cell {
+                width: calc(10vw - 2px);
+                height: calc(10vw - 2px);
+                line-height: calc(10vw - 2px);
+            }
+            #crosswordGame {
+                width: 100%;
+                margin: 10px auto !important;
+                padding: 0 5px;
+                box-sizing: border-box;
+            }
+            .home-button {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            #languageSelect {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                font-size: 14px;
+            }
+            h1 {
+                margin-top: 50px;
+                font-size: 24px;
+            }
+            button {
+                padding: 8px 16px;
+                font-size: 14px;
+                margin: 3px;
+            }
+            #crosswordControls {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+        }
+        .error-message {
+            color: #f44336;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 20px;
+            margin: 20px;
+            border: 2px solid #f44336;
+            border-radius: 5px;
+            background-color: #ffebee;
+            text-align: center;
+        }
+        #crosswordStatus {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #333;
+            transition: color 0.3s;
+        }
+    </style>
+</head>
+<body>
+    
+    <select id="languageSelect" onchange="changeLanguage(this.value)" aria-label="Выбор языка">
+        <option value="ru">Русский</option>
+        <option value="uk">Українська</option>
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+    </select>
+
+    <div id="crossNumber">
+        <h1>Числовой кроссворд</h1>
+        <p>Заполните пустые клетки, чтобы в каждой строке и столбце сумма чисел была верной</p>
+        <div style="font-size: 14px; color: #666; margin-bottom: 10px;">
+            Developer: Vitalii Khomenko, Stuttgart, 03.2025
+        </div>
+        <div id="crosswordControls">
+            <button onclick="startCrossword()">Начать новый кроссворд</button>
+            <select id="crosswordSize" aria-label="Выбор размера кроссворда">
+                <option value="3">3×3 (легкий)</option>
+                <option value="4">4×4 (средний)</option>
+                <option value="5">5×5 (сложный)</option>
+            </select>
+        </div>
+        <div id="crosswordGame" style="margin: 20px auto; display: none;">
+            <div id="crosswordGrid" style="display: inline-block;"></div>
+            <div id="crosswordInfo" style="margin-top: 20px;">
+                <p id="crosswordStatus"></p>
+                <button onclick="checkCrossword()" id="checkButton">Проверить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Локализация
+        const translations = {
+            en: {
+                title: "Number Crossword",
+                description: "Fill in the empty cells so that the sum in each row and column matches",
+                newGame: "New Crossword",
+                check: "Check",
+                correct: "Congratulations! All correct!",
+                incorrect: "There are errors. Try again!",
+                home: "Home",
+                difficulty: {
+                    easy: "3×3 (easy)",
+                    medium: "4×4 (medium)",
+                    hard: "5×5 (hard)"
+                }
+            },
+            de: {
+                title: "Zahlen-Kreuzworträtsel",
+                description: "Fülle die leeren Zellen so aus, dass die Summe in jeder Zeile und Spalte stimmt",
+                newGame: "Neues Rätsel",
+                check: "Prüfen",
+                correct: "Gratulation! Alles richtig!",
+                incorrect: "Es gibt Fehler. Versuche es noch einmal!",
+                home: "Startseite",
+                difficulty: {
+                    easy: "3×3 (leicht)",
+                    medium: "4×4 (mittel)",
+                    hard: "5×5 (schwer)"
+                }
+            },
+            ru: {
+                title: "Числовой кроссворд",
+                description: "Заполните пустые клетки, чтобы в каждой строке и столбце сумма чисел была верной",
+                newGame: "Новый кроссворд",
+                check: "Проверить",
+                correct: "Поздравляем! Все верно!",
+                incorrect: "Есть ошибки. Попробуйте еще раз!",
+                home: "На главную",
+                difficulty: {
+                    easy: "3×3 (легкий)",
+                    medium: "4×4 (средний)",
+                    hard: "5×5 (сложный)"
+                }
+            },
+            uk: {
+                title: "Числовий кросворд",
+                description: "Заповніть порожні клітинки так, щоб у кожному рядку та стовпці сума чисел була вірною",
+                newGame: "Новий кросворд",
+                check: "Перевірити",
+                correct: "Вітаємо! Все вірно!",
+                incorrect: "Є помилки. Спробуйте ще раз!",
+                home: "На головну",
+                difficulty: {
+                    easy: "3×3 (легкий)",
+                    medium: "4×4 (середній)",
+                    hard: "5×5 (складний)"
+                }
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('gameLanguage') || 'ru';
+
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('gameLanguage', lang);
+            updateTexts();
+        }
+
+        function updateTexts() {
+            const t = translations[currentLanguage];
+            document.title = t.title;
+            document.querySelector('h1').textContent = t.title;
+            document.querySelector('#crossNumber p').textContent = t.description;
+            document.querySelector('#crosswordControls button').textContent = t.newGame;
+            document.getElementById('checkButton').textContent = t.check;
+            
+            // Обновляем опции сложности
+            const sizeSelect = document.getElementById('crosswordSize');
+            const options = sizeSelect.options;
+            options[0].textContent = t.difficulty.easy;
+            options[1].textContent = t.difficulty.medium;
+            options[2].textContent = t.difficulty.hard;
+
+            // Обновляем статус, если он есть
+            const status = document.getElementById('crosswordStatus');
+            if (status.textContent) {
+                status.textContent = status.textContent.includes('Поздравляем') ? t.correct : t.incorrect;
+            }
+        }
+
+        // Инициализация языка
+        updateTexts();
+
+        let crosswordData = {
+            grid: [],
+            sums: { rows: [], cols: [] },
+            solution: [],
+            size: 3
+        };
+
+        function startCrossword() {
+            const size = parseInt(document.getElementById('crosswordSize').value);
+            crosswordData.size = size;
+            generateCrossword(size);
+            displayCrossword();
+            document.getElementById('crosswordGame').style.display = 'block';
+            document.getElementById('crosswordStatus').textContent = '';
+        }
+
+        function generateCrossword(size) {
+            crosswordData.grid = [];
+            crosswordData.solution = [];
+            crosswordData.sums = { rows: [], cols: [] };
+
+            // Создаем решение
+            for (let i = 0; i < size; i++) {
+                crosswordData.solution[i] = [];
+                for (let j = 0; j < size; j++) {
+                    crosswordData.solution[i][j] = Math.floor(Math.random() * 9) + 1;
+                }
+            }
+
+            // Вычисляем суммы
+            for (let i = 0; i < size; i++) {
+                crosswordData.sums.rows[i] = crosswordData.solution[i].reduce((a, b) => a + b, 0);
+                let colSum = 0;
+                for (let j = 0; j < size; j++) {
+                    colSum += crosswordData.solution[j][i];
+                }
+                crosswordData.sums.cols[i] = colSum;
+            }
+
+            // Создаем игровую сетку с пустыми ячейками
+            for (let i = 0; i < size; i++) {
+                crosswordData.grid[i] = [];
+                for (let j = 0; j < size; j++) {
+                    // Оставляем примерно 60% чисел видимыми
+                    if (Math.random() > 0.4) {
+                        crosswordData.grid[i][j] = crosswordData.solution[i][j];
+                    } else {
+                        crosswordData.grid[i][j] = 0; // 0 означает пустую ячейку
+                    }
+                }
+            }
+        }
+
+        function displayCrossword() {
+            const gridDiv = document.getElementById('crosswordGrid');
+            gridDiv.innerHTML = '';
+            const size = crosswordData.size;
+
+            // Добавляем верхнюю строку с суммами столбцов
+            const topRow = document.createElement('div');
+            topRow.className = 'grid-row';
+            topRow.innerHTML = '<div class="grid-cell"></div>' + 
+                crosswordData.sums.cols.map(sum => `<div class="grid-cell sum">=${sum}</div>`).join('');
+            gridDiv.appendChild(topRow);
+
+            // Создаем основную сетку
+            for (let i = 0; i < size; i++) {
+                const row = document.createElement('div');
+                row.className = 'grid-row';
+                
+                // Добавляем сумму строки в начале
+                row.innerHTML = `<div class="grid-cell sum">=${crosswordData.sums.rows[i]}</div>`;
+                
+                for (let j = 0; j < size; j++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    if (crosswordData.grid[i][j] === 0) {
+                        const input = document.createElement('input');
+                        input.type = 'tel';
+                        input.inputMode = 'numeric';
+                        input.pattern = '[1-9]';
+                        input.min = '1';
+                        input.max = '9';
+                        input.dataset.row = i;
+                        input.dataset.col = j;
+                        input.addEventListener('input', function() {
+                            if (this.value.length > 1) {
+                                this.value = this.value.slice(0, 1);
+                            }
+                            const num = parseInt(this.value);
+                            if (isNaN(num) || num < 1 || num > 9) {
+                                this.value = '';
+                            }
+                        });
+                        cell.appendChild(input);
+                    } else {
+                        cell.textContent = crosswordData.grid[i][j];
+                    }
+                    row.appendChild(cell);
+                }
+                gridDiv.appendChild(row);
+            }
+        }
+
+        function checkCrossword() {
+            const t = translations[currentLanguage];
+            if (!checkIntegrity()) {
+                blockGame();
+                return;
+            }
+
+            const size = crosswordData.size;
+            let isCorrect = true;
+            const cells = document.querySelectorAll('.grid-cell:not(.sum)');
+            const inputs = document.querySelectorAll('#crosswordGrid input');
+            
+            // Сначала очищаем все классы подсветки
+            cells.forEach(cell => cell.classList.remove('correct', 'incorrect'));
+            inputs.forEach(input => input.classList.remove('correct', 'incorrect'));
+
+            // Проверяем каждую строку и столбец
+            for (let i = 0; i < size; i++) {
+                let rowSum = 0;
+                let colSum = 0;
+                for (let j = 0; j < size; j++) {
+                    const cellValue = getCellValue(i, j);
+                    const cellValueTransposed = getCellValue(j, i);
+                    if (cellValue === null || cellValueTransposed === null) {
+                        isCorrect = false;
+                    } else {
+                        rowSum += cellValue;
+                        colSum += cellValueTransposed;
+                    }
+                }
+                if (rowSum !== crosswordData.sums.rows[i] || colSum !== crosswordData.sums.cols[i]) {
+                    isCorrect = false;
+                }
+            }
+
+            // Подсвечиваем результат
+            inputs.forEach(input => {
+                const row = parseInt(input.dataset.row);
+                const col = parseInt(input.dataset.col);
+                const value = parseInt(input.value);
+                if (value === crosswordData.solution[row][col]) {
+                    input.classList.add('correct');
+                    input.parentElement.classList.add('correct');
+                } else {
+                    input.classList.add('incorrect');
+                    input.parentElement.classList.add('incorrect');
+                }
+            });
+
+            document.getElementById('crosswordStatus').textContent = 
+                isCorrect ? t.correct : t.incorrect;
+
+            // Удаляем подсветку через 5 секунд
+            setTimeout(() => {
+                cells.forEach(cell => cell.classList.remove('correct', 'incorrect'));
+                inputs.forEach(input => input.classList.remove('correct', 'incorrect'));
+                // Очищаем статус только если игра не решена
+                if (!isCorrect) {
+                    document.getElementById('crosswordStatus').textContent = '';
+                }
+            }, 5000);
+        }
+
+        function getCellValue(row, col) {
+            const cell = document.querySelector(`#crosswordGrid .grid-row:nth-child(${row + 2}) .grid-cell:nth-child(${col + 2})`);
+            if (cell.textContent) {
+                return parseInt(cell.textContent);
+            } else if (cell.querySelector('input').value) {
+                return parseInt(cell.querySelector('input').value);
+            }
+            return null;
+        }
+
+        // Функция проверки целостности
+        function checkIntegrity() {
+            const developerInfo = document.querySelector('#crossNumber div[style*="font-size: 14px"]').textContent.trim();
+            const expectedInfo = "Developer: Vitalii Khomenko, Stuttgart, 03.2025";
+            return developerInfo === expectedInfo;
+        }
+
+        // Функция блокировки игры
+        function blockGame() {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                ОШИБКА: Обнаружено несанкционированное изменение кода!<br>
+                ERROR: Unauthorized code modification detected!<br>
+                FEHLER: Unbefugte Codeänderung erkannt!<br>
+                ПОМИЛКА: Виявлено несанкціоновану зміну коду!<br><br>
+                <span style="font-size: 14px;">
+                    Пожалуйста, восстановите оригинальную информацию о разработчике.<br>
+                    Please restore the original developer information.<br>
+                    Bitte stellen Sie die ursprünglichen Entwicklerinformationen wieder her.<br>
+                    Будь ласка, відновіть оригінальну інформацію про розробника.
+                </span>
+            `;
+            
+            document.getElementById('crosswordGrid').innerHTML = '';
+            document.getElementById('crosswordControls').style.display = 'none';
+            document.getElementById('crosswordInfo').style.display = 'none';
+            document.getElementById('crosswordStatus').textContent = '';
+            
+            // Добавляем сообщение об ошибке после заголовка
+            const title = document.querySelector('#crossNumber h1');
+            title.parentNode.insertBefore(errorDiv, title.nextSibling);
+        }
+
+        // Модифицируем основные функции игры
+        const originalStartCrossword = startCrossword;
+        startCrossword = function() {
+            if (!checkIntegrity()) {
+                blockGame();
+                return;
+            }
+            originalStartCrossword();
+        }
+
+        // Добавляем проверку при загрузке страницы
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkIntegrity()) {
+                blockGame();
+                return;
+            }
+            const languageSelect = document.getElementById('languageSelect');
+            languageSelect.value = currentLanguage;
+            updateTexts();
+        });
+
+        // Добавляем периодическую проверку
+        setInterval(function() {
+            if (!checkIntegrity()) {
+                blockGame();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
